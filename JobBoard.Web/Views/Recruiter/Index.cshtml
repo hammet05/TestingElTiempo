@@ -1,0 +1,193 @@
+﻿@model IEnumerable<JobBoard.Web.Models.ViewModels.Recruiter.JobOfferAdminListItem>
+@{
+    ViewBag.Title = "Mis ofertas";
+    string Money(decimal v) => v <= 0 ? "A convenir" : v.ToString("C0");
+}
+
+<div class="container py-5">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 mb-1">Ofertas publicadas</h1>
+            <div class="text-muted">Administra tus ofertas: publica, edita, activa/inactiva o elimina.</div>
+        </div>
+        <a class="btn btn-primary" href="@Url.Action("Create", "Recruiter")">
+            <i class="fa-solid fa-plus me-2"></i>Nueva oferta
+        </a>
+    </div>
+
+    @if (TempData["Toast"] != null)
+    {
+        <div class="alert alert-success">@TempData["Toast"]</div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:32px;"></th>
+                            <th>Título</th>
+                            <th>Ubicación</th>
+                            <th>Contrato</th>
+                            <th>Salario</th>
+                            <th>Publicación</th>
+                            <th>Estado</th>
+                            <th style="width:220px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr><td colspan="8" class="text-center text-muted py-4">Aún no tienes ofertas.</td></tr>
+                        }
+                        else
+                        {
+                            foreach (var x in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <i class="fa-solid fa-briefcase text-secondary"></i>
+                                    </td>
+                                    <td class="fw-semibold">@x.Title</td>
+                                    <td><i class="fa-solid fa-location-dot me-1 text-muted"></i>@x.Location</td>
+                                    <td><span class="badge bg-primary-subtle text-primary">@x.ContractType</span></td>
+                                    <td>@Money(x.Salary)</td>
+                                    <td>@x.PublishedAt.ToString("yyyy-MM-dd")</td>
+                                    <td data-role="status-cell">
+                                        @if (x.IsActive)
+                                        {
+                                            <span class="badge text-bg-success" data-role="status-badge">
+                                                <i class="fa-solid fa-circle-check me-1"></i>Activa
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge text-bg-secondary" data-role="status-badge">
+                                                <i class="fa-regular fa-circle me-1"></i>Inactiva
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <a class="btn btn-sm btn-outline-secondary"
+                                               href="@Url.Action("Edit", "Recruiter", new { id = x.Id })">
+                                                <i class="fa-solid fa-pen-to-square"></i> Editar
+                                            </a>
+
+                                            @using (Ajax.BeginForm(
+                                                "Toggle", "Recruiter",
+                                                new { id = x.Id },
+                                                new AjaxOptions { HttpMethod = "POST", OnSuccess = "onToggleSuccess", OnFailure = "onToggleFailure" },
+                                                new { @class = "d-inline toggle-form" }))
+                                            {
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm @(x.IsActive ? "btn-warning" : "btn-success")">
+                                                    @if (x.IsActive)
+                                                    {<text><i class="fa-solid fa-eye-slash"></i> Desactivar</text> }
+                                                else
+                                                { <text><i class="fa-solid fa-eye"></i> Activar</text>}
+                                                </button>
+                                            }
+
+                                            @using (Ajax.BeginForm(
+                                                "DeleteConfirmed", "Recruiter",
+                                                new { id = x.Id },
+                                                new AjaxOptions
+                                                {
+                                                    HttpMethod = "POST",
+                                                    OnBegin = "onDeleteBegin",
+                                                    OnSuccess = "onDeleteSuccess",
+                                                    OnFailure = "onDeleteFailure",
+                                                    OnComplete = "onDeleteComplete"
+                                                },
+                                                new { @class = "d-inline delete-form" }))
+                                            {
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fa-solid fa-trash"></i> Eliminar
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        function onToggleSuccess(res) {
+            var $form = $(this);
+            if (!res || !res.ok) { onToggleFailure(res); return; }
+
+            var $row = $form.closest('tr');
+            var $badge = $row.find('[data-role="status-badge"]');
+            var $btn = $form.find('button[type=submit]');
+
+            if (res.active) {
+                $badge.removeClass('text-bg-secondary').addClass('text-bg-success')
+                    .html('<i class="fa-solid fa-circle-check me-1"></i>Activa');
+                $btn.removeClass('btn-success').addClass('btn-warning')
+                    .html('<i class="fa-solid fa-eye-slash"></i> Desactivar');
+            } else {
+                $badge.removeClass('text-bg-success').addClass('text-bg-secondary')
+                    .html('<i class="fa-regular fa-circle me-1"></i>Inactiva');
+                $btn.removeClass('btn-warning').addClass('btn-success')
+                    .html('<i class="fa-solid fa-eye"></i> Activar');
+            }
+        }
+
+        function onToggleFailure(err) {
+            alert((err && err.message) || 'No se pudo cambiar el estado');
+        }
+    </script>
+
+    <script>
+        function onDeleteBegin() {
+            var $form = $(this);
+            if (!confirm('¿Eliminar esta oferta?')) return false;
+
+            var $btn = $form.find('button[type=submit]');
+            $btn.prop('disabled', true)
+                .append(' <span class="spinner-border spinner-border-sm"></span>');
+        }
+
+        function onDeleteSuccess(res) {
+            var $form = $(this);
+            if (!res || !res.ok) { onDeleteFailure(res); return; }
+
+            var $row = $form.closest('tr');
+            $row.fadeOut(150, function () {
+                $(this).remove();
+
+                var $tbody = $('table tbody');
+                if ($tbody.find('tr').length === 0) {
+                    $tbody.append('<tr><td colspan="8" class="text-center text-muted py-4">Aún no tienes ofertas.</td></tr>');
+                }
+            });
+
+            if (typeof showToast === 'function')
+                showToast(res.message || 'Oferta eliminada');
+        }
+
+        function onDeleteFailure(err) {
+            if (typeof showToast === 'function')
+                showToast((err && err.message) || 'No se pudo eliminar', true);
+            else
+                alert((err && err.message) || 'No se pudo eliminar');
+        }
+
+        function onDeleteComplete() {
+            var $form = $(this);
+            $form.find('button[type=submit]')
+                .prop('disabled', false)
+                .find('.spinner-border').remove();
+        }
+    </script>
+}

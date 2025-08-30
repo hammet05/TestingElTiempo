@@ -1,0 +1,228 @@
+﻿@model IEnumerable<JobBoard.Web.Models.ViewModels.Candidate.JobOfferListItem>
+@{
+    ViewBag.Title = "Ofertas de empleo en Colombia";
+    var locations = Model.Where(x => !string.IsNullOrWhiteSpace(x.Location))
+                         .Select(x => x.Location).Distinct().OrderBy(x => x).ToList();
+    var contracts = Model.Where(x => !string.IsNullOrWhiteSpace(x.ContractType))
+                         .Select(x => x.ContractType).Distinct().OrderBy(x => x).ToList();
+    string FormatMoney(decimal v) => v <= 0 ? "A convenir" : v.ToString("C0");
+}
+
+<div class="container py-5">
+    <section class="text-center mb-5">
+        <h1 class="display-5 fw-bold mb-3">Encuentra tu próxima oportunidad</h1>
+        <p class="lead text-muted mb-4">
+            Explora ofertas activas y aplica en minutos.
+        </p>
+
+        <div class="row g-2 justify-content-center">
+            <div class="col-12 col-md-5">
+                <input id="q" type="search" class="form-control form-control-lg" placeholder="Buscar por título o descripción…" />
+            </div>
+            <div class="col-6 col-md-3">
+                <select id="loc" class="form-select form-select-lg">
+                    <option value="">Todas las ciudades</option>
+                    @foreach (var loc in locations)
+                    {
+                        <option value="@loc">@loc</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <select id="contract" class="form-select form-select-lg">
+                    <option value="">Todos los contratos</option>
+                    @foreach (var ct in contracts)
+                    {
+                        <option value="@ct">@ct</option>
+                    }
+                </select>
+            </div>
+            <div class="col-12 col-md-2">
+                <select id="sort" class="form-select form-select-lg">
+                    <option value="date_desc">Más recientes</option>
+                    <option value="date_asc">Más antiguas</option>
+                    <option value="salary_desc">Mejor salario</option>
+                    <option value="salary_asc">Menor salario</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mt-3 text-muted" id="counter">
+            @Model.Count() oferta(s) disponible(s)
+        </div>
+    </section>
+
+    <section id="cards" class="row g-4">
+        @if (!Model.Any())
+        {
+            <div class="col-12">
+                <div class="alert alert-info shadow-sm">
+                    No hay ofertas publicadas aún. ¡Vuelve pronto!
+                </div>
+            </div>
+        }
+        else
+        {
+            foreach (var x in Model)
+            {
+                var days = (int)(DateTime.UtcNow - x.PublishedAt.ToUniversalTime()).TotalDays;
+                var when = days <= 0 ? "Hoy" : (days == 1 ? "Ayer" : $"Hace {days} días");
+                <div class="col-12 col-md-6 col-lg-4 offer"
+                     data-id="@x.Id"
+                     data-title="@x.Title"
+                     data-location="@x.Location"
+                     data-contract="@x.ContractType"
+                     data-salary="@x.Salary"
+                     data-date="@x.PublishedAt.ToString("o")">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex align-items-start justify-content-between">
+                                <h3 class="h5 card-title mb-2">@x.Title</h3>
+                                <span class="badge bg-primary-subtle text-primary">@x.ContractType</span>
+                            </div>
+                            <p class="mb-1 text-secondary">
+                                <span class="me-2"><i class="fa-solid fa-location-dot"></i> @x.Location</span>
+                                <span><i class="fa-solid fa-sack-dollar"></i> @FormatMoney(x.Salary)</span>
+                            </p>
+                            <p class="small text-muted mb-3">Publicado: @when (@x.PublishedAt.ToString("yyyy-MM-dd"))</p>
+
+                            <p class="text-muted mb-4" style="min-height: 3.5rem;">
+                                Trabaja con un equipo que valora buenas prácticas, colaboración y aprendizaje continuo.
+                            </p>
+
+                            <div class="mt-auto d-flex gap-2">
+                                <button type="button"
+                                        class="btn btn-success w-100 btn-apply"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#applyModal">
+                                    Aplicar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </section>
+
+    <section class="mt-5">
+        <div class="p-4 rounded-3 bg-light border">
+            <h4 class="fw-bold mb-2">Consejo</h4>
+            <p class="text-muted mb-0">
+                Ajusta tu búsqueda con los filtros de arriba y ordena por fecha o salario.
+                La postulación es una simulación: te pediremos solo tu nombre y correo.
+            </p>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="applyModal" tabindex="-1" aria-labelledby="applyLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title" id="applyLabel">Aplicar a: <span id="apply-jobtitle" class="fw-semibold"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <form id="applyForm" novalidate>
+                <div class="modal-body">
+                    <input type="hidden" id="apply-jobid" name="JobOfferId" />
+                    <div class="mb-3">
+                        <label class="form-label">Nombre completo</label>
+                        <input type="text" name="Name" class="form-control" required maxlength="120" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Correo electrónico</label>
+                        <input type="email" name="Email" class="form-control" required />
+                    </div>
+                    <div class="small text-muted">
+                        * Envío simulado: no se almacena estos datos.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Enviar postulación</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index:1100">
+    <div id="applyToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                ¡Tu postulación fue enviada! (evento simulado)
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        (function () {
+            const $q = document.getElementById('q');
+            const $loc = document.getElementById('loc');
+            const $ct = document.getElementById('contract');
+            const $sort = document.getElementById('sort');
+            const $cards = document.getElementById('cards');
+            const $counter = document.getElementById('counter');
+
+            const items = Array.from($cards.querySelectorAll('.offer'));
+            const applyModalEl = document.getElementById('applyModal');
+            const titleSpan = document.getElementById('apply-jobtitle');
+            const idHidden = document.getElementById('apply-jobid');
+            const applyForm = document.getElementById('applyForm');
+            const toastEl = document.getElementById('applyToast');
+
+            function normalize(s) { return (s || '').toString().toLowerCase().trim(); }
+
+            function applyFilters() {
+                const q = normalize($q.value), loc = normalize($loc.value), ct = normalize($ct.value);
+                let shown = 0;
+                items.forEach(el => {
+                    const t = normalize(el.dataset.title), l = normalize(el.dataset.location), c = normalize(el.dataset.contract);
+                    const visible = (!q || t.includes(q)) && (!loc || l === loc) && (!ct || c === ct);
+                    el.style.display = visible ? '' : 'none';
+                    if (visible) shown++;
+                });
+                $counter.textContent = `${shown} oferta(s) visible(s)`;
+            }
+
+            function applySort() {
+            }
+
+            $cards.addEventListener('click', function (e) {
+                const btn = e.target.closest('.btn-apply');
+                if (!btn) return;
+                const card = btn.closest('.offer');
+                titleSpan.textContent = card.dataset.title || '';
+                idHidden.value = card.dataset.id || '';
+            });
+
+            applyForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                if (!applyForm.checkValidity()) { applyForm.reportValidity(); return; }
+
+                const modal = bootstrap.Modal.getInstance(applyModalEl) || new bootstrap.Modal(applyModalEl);
+                modal.hide();
+
+                applyForm.reset();
+
+                const toast = new bootstrap.Toast(toastEl, { delay: 2500 });
+                toast.show();
+            });
+
+            applySort();
+            applyFilters();
+
+            $q.addEventListener('input', applyFilters);
+            $loc.addEventListener('change', applyFilters);
+            $ct.addEventListener('change', applyFilters);
+            $sort.addEventListener('change', applySort);
+        })();
+    </script>
+}
+
