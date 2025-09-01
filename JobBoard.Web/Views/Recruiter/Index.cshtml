@@ -120,9 +120,12 @@
     </div>
 </div>
 
+@Html.Partial("~/Views/Shared/_AjaxToast.cshtml")
+
 @section scripts{
     <script>
         function onToggleSuccess(res) {
+
             var $form = $(this);
             if (!res || !res.ok) { onToggleFailure(res); return; }
 
@@ -141,6 +144,11 @@
                 $btn.removeClass('btn-warning').addClass('btn-success')
                     .html('<i class="fa-solid fa-eye"></i> Activar');
             }
+
+            showToast(res.message || 'Cambio de estado exitoso');
+             setTimeout(function () {
+                 window.location = '@Url.Action("Index", "Recruiter")';
+             }, 1000);
         }
 
         function onToggleFailure(err) {

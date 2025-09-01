@@ -21,7 +21,9 @@ namespace JobBoard.Services
         public IEnumerable<JobOfferListDto> List(bool onlyActive = true)
         {
             var q = Repo.Query();
-            if (onlyActive) q = q.Where(x => x.IsActive == onlyActive);
+
+            if (onlyActive) q = q.Where(x => x.IsActive);
+
             return q.OrderByDescending(x => x.PublishedAt)
                     .ProjectTo<JobOfferListDto>(Mapper.ConfigurationProvider)
                     .ToList();
@@ -53,6 +55,30 @@ namespace JobBoard.Services
         public void Apply(int offerId, string name, string email)
         {
             System.Diagnostics.Debug.WriteLine($"APPLY -> OfferId:{offerId} Name:{name} Email:{email}");
+        }
+
+        public void Update(int id, JobOfferUpdateDto dto)
+        {
+            var offer = Repo.Find(id);
+            offer.UpdatedAt = DateTime.UtcNow;
+
+            if (offer == null) throw new KeyNotFoundException("La oferta no existe");
+            Mapper.Map(dto, offer);
+            Repo.Update(offer);
+
+            Uow.SaveChanges();
+        }
+
+        public void ChangeStatusAsync(int id, bool isActive)
+        {
+            var entity = Repo.Find(id);
+            if (entity == null) throw new Exception("Oferta no encontrada");
+
+            entity.IsActive = isActive;
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            Repo.UpdateProperties(entity);
+            Uow.SaveChanges();
         }
     }
 }

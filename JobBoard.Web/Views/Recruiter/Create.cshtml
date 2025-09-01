@@ -23,7 +23,7 @@
 
         <div class="card shadow-sm mb-4">
             <div class="card-body">
-                <div class="row g-3">
+                <div class="row mb-3">
                     <div class="col-md-6">
                         @Html.Label("Título", new { @class = "form-label" })
                         @Html.TextBoxFor(m => m.Title, new { @class = "form-control w-100", maxlength = "120" })
@@ -34,30 +34,30 @@
                         @Html.TextBoxFor(m => m.Location, new { @class = "form-control", maxlength = "120" })
                         @Html.ValidationMessageFor(m => m.Location, "", new { @class = "text-danger" })
                     </div>
-
-                    <div class="col-12">
+                    <div class="row mb-6">
                         @Html.Label("Descripción", new { @class = "form-label" })
                         @Html.TextAreaFor(m => m.Description, 6, 50, new { @class = "form-control" })
                         @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
                     </div>
-
-                    <div class="col-md-4">
-                        @Html.Label("Salario (COP)", new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.Salary, new { @class = "form-control", type = "number", step = "0.01", min = "0" })
-                        @Html.ValidationMessageFor(m => m.Salary, "", new { @class = "text-danger" })
-                    </div>
-                    <div class="col-md-4">
-                        @Html.Label("Contrato", new { @class = "form-label" })
-                        @Html.DropDownListFor(m => m.ContractType, Model.ContractTypeOptions, "Seleccione...", new { @class = "form-select" })
-                        @Html.ValidationMessageFor(m => m.ContractType, "", new { @class = "text-danger" })
-                    </div>
-                    <div class="col-md-4 d-flex align-items-end">
-                        <div class="form-check">
-                            @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input", id = "isAct" })
-                            <label class="form-check-label" for="isAct">Oferta activa</label>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            @Html.Label("Salario (COP)", new { @class = "form-label" })
+                            @Html.TextBoxFor(m => m.Salary, new { @class = "form-control", type = "number", step = "0.01", min = "0" })
+                            @Html.ValidationMessageFor(m => m.Salary, "", new { @class = "text-danger" })
                         </div>
-                    </div>
-                </div>
+                        <div class="col-md-4">
+                            @Html.Label("Contrato", new { @class = "form-label" })
+                            @Html.DropDownListFor(m => m.ContractType, Model.ContractTypeOptions, "Seleccione...", new { @class = "form-select" })
+                            @Html.ValidationMessageFor(m => m.ContractType, "", new { @class = "text-danger" })
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <div class="form-check">
+                                @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input", id = "isAct" })
+                                <label class="form-check-label" for="isAct">Oferta activa</label>
+                            </div>
+                        </div>
+                    </div>                      
+                 </div>
             </div>
         </div>
 

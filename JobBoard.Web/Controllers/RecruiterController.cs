@@ -6,8 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Web.Mvc;
 using System.Reflection;
+using System.Web.Mvc;
+
 
 namespace JobBoard.Web.Controllers
 {
@@ -28,6 +29,7 @@ namespace JobBoard.Web.Controllers
                     Salary = d.Salary,
                     ContractType = d.ContractType,
                     PublishedAt = d.PublishedAt,
+                    IsActive = d.IsActive // Bug 1 agregar campo isActive al viewmodel    
                 });
 
             return View(vms);
@@ -104,16 +106,34 @@ namespace JobBoard.Web.Controllers
                 return View(vm);
             }
 
+            // var jobOffer = _repository.GetById(id);
+            var jobOffer = Service.Get(id);
+
+            if (jobOffer == null)
+            {
+                if (Request.IsAjaxRequest())
+                    return Json(new { ok = false, message = "Oferta no encontrada" });
+                return HttpNotFound();
+            }
             //
+            Service.Update(id, new JobOfferUpdateDto
+            {
+                Title = vm.Title,
+                Description = vm.Description,
+                Location = vm.Location,
+                Salary = vm.Salary,
+                ContractType = vm.ContractType.ToString(),
+                IsActive = vm.IsActive
+            });
 
             if (Request.IsAjaxRequest())
             {
-                TempData["Toast"] = "Oferta actualizada";
-
-                return Json(new { ok = true, message = "Oferta actualizada" });
+                return Json(new { ok = true, message = "Oferta actualizada exitosamente" });
             }
+            TempData["Toast"] = "Oferta actualizada";
 
             return RedirectToAction("Index");
+            //return RedirectToAction("Index", "Recruiter");
         }
 
         [HttpPost, ValidateAntiForgeryToken]
@@ -122,9 +142,16 @@ namespace JobBoard.Web.Controllers
             var dto = Service.Get(id);
             if (dto == null) return Json(new { ok = false, message = "Oferta no encontrada" });
 
+            Service.ChangeStatusAsync(id, !dto.IsActive);
             var newActive = !dto.IsActive;
 
-            return Json(new { ok = true, active = newActive });
+            if (Request.IsAjaxRequest())
+                return Json(new { ok = true, active = newActive });
+
+            //TempData["Toast"] = "Cambio de estado exitoso";
+
+
+            return RedirectToAction("Index");
         }
 
         [HttpPost, ValidateAntiForgeryToken]

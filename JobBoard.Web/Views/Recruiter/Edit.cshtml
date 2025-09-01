@@ -15,41 +15,74 @@
         OnFailure = "crudFailure",
         OnComplete = "crudComplete"
     },
+
     new { id = "frmEdit", autocomplete = "off" }))
 {
     @Html.AntiForgeryToken()
 
+<div class="card shadow-sm mb-4">
 
-    @Html.Label("Título", new { @class = "form-label" })
-    @Html.TextBoxFor(m => m.Title, new { @class = "form-control w-100", maxlength = "120" })
-    @Html.ValidationMessageFor(m => m.Title, "", new { @class = "text-danger" })
+    @if (TempData["Toast"] != null)
+    {
+        <div class="alert alert-success">@TempData["Toast"]</div>
+    }
 
-    @Html.Label("Ubicación", new { @class = "form-label" })
-    @Html.TextBoxFor(m => m.Location, new { @class = "form-control", maxlength = "120" })
-    @Html.ValidationMessageFor(m => m.Location, "", new { @class = "text-danger" })
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                @*Título*@
+                @Html.Label("Título", new { @class = "form-label" })
+                @Html.TextBoxFor(m => m.Title, new { @class = "form-control w-100", maxlength = "120" })
+                @Html.ValidationMessageFor(m => m.Title, "", new { @class = "text-danger" })
+            </div>
 
-    @Html.Label("Descripción", new { @class = "form-label" })
-    @Html.TextAreaFor(m => m.Description, 6, 50, new { @class = "form-control" })
-    @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
+            @*Ubicación*@
+            <div class="col-md-6">
+                @Html.Label("Ubicación", new { @class = "form-label" })
+                @Html.TextBoxFor(m => m.Location, new { @class = "form-control", maxlength = "120" })
+                @Html.ValidationMessageFor(m => m.Location, "", new { @class = "text-danger" })
+            </div>
+        </div>
 
-    @Html.Label("Salario (COP)", new { @class = "form-label" })
-    @Html.TextBoxFor(m => m.Salary, new { @class = "form-control", type = "number", step = "0.01", min = "0" })
-    @Html.ValidationMessageFor(m => m.Salary, "", new { @class = "text-danger" })
+        @*Descripción*@
+        <div class="row mb-3">
+            @Html.Label("Descripción", new { @class = "form-label" })
+            @Html.TextAreaFor(m => m.Description, 6, 50, new { @class = "form-control" })
+            @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
+        </div>
 
-    @Html.Label("Contrato", new { @class = "form-label" })
-    @Html.DropDownListFor(m => m.ContractType, Model.ContractTypeOptions, "Seleccione...", new { @class = "form-select" })
-    @Html.ValidationMessageFor(m => m.ContractType, "", new { @class = "text-danger" })
+        @*Salario*@
+        <div class="row mb-3">
+            <div class="col-md-4">
+                @Html.Label("Salario (COP)", new { @class = "form-label" })
+                @Html.TextBoxFor(m => m.Salary, new { @class = "form-control", type = "number", step = "0.01", min = "0" })
+                @Html.ValidationMessageFor(m => m.Salary, "", new { @class = "text-danger" })
+            </div>
 
-    <div class="form-check">
-        @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input", id = "isAct" })
-        <label class="form-check-label" for="isAct">Oferta activa</label>
+            @*Contrato*@
+            <div class="col-md-4">
+                @Html.Label("Contrato", new { @class = "form-label" })
+                @Html.DropDownListFor(m => m.ContractType, Model.ContractTypeOptions, "Seleccione...", new { @class = "form-select" })
+                @Html.ValidationMessageFor(m => m.ContractType, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="col-md-4 d-flex align-items-end">
+                <div class="form-check">
+                    @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input", id = "isAct" })
+                    <label class="form-check-label" for="isAct">Oferta activa</label>
+                </div>
+            </div>
+
+        </div>
     </div>
+</div>
 
     <div class="card-footer d-flex gap-2">
-        <button id="btnEdit" type="submit">
+        <button id="btnEdit" type="submit" class="btn btn-primary" > 
+            @*href="@Url.Action("Edit", "Recruiter")"*@
             <i class="fa-solid fa-floppy-disk me-2"></i>Actualizar
         </button>
-        <a href="@Url.Action("Index","Recruiter",new { area = "Recruiter" })">Volver</a>
+        <a class="btn btn-outline-secondary" href="@Url.Action("Index","Recruiter",new { area = "Recruiter" })">Volver</a>
     </div>
 }
 
@@ -69,7 +102,11 @@
             if (!res || !res.ok) {
                 crudFailure(res); return;
             }
-            setTimeout(function () { window.location = '@Url.Action("Edit", "Offer", new { area = "Recruiter" })'; }, 800);
+
+            showToast(res.message || 'Oferta actualizada exitosamente');
+            setTimeout(function () {
+                window.location = '@Url.Action("Index", "Recruiter")';
+            }, 1000);
         }
         function crudFailure() {
             showToast('No se pudo actualizar', true);

@@ -17,5 +17,11 @@ namespace JobBoard.Data.Repository
 
         void Attach(T entity);
         void Detach(T entity);
+        void Update(T entity);
+
+        void UpdateProperty<TProperty>(T entity, Expression<Func<T, TProperty>> property);
+
+        void UpdateProperties(T entity, params Expression<Func<T, object>>[] properties);
+
     }
 }

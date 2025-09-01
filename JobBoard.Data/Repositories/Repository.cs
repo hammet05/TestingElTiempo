@@ -1,5 +1,5 @@
-﻿using System.Data.Entity;
-using System;
+﻿using System;
+using System.Data.Entity;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -47,6 +47,24 @@ namespace JobBoard.Data.Repository
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));
             _ctx.Entry(entity).State = EntityState.Detached;
+        }
+
+        public void Update(T entity)
+        {
+            _ctx.Entry(entity).State = EntityState.Modified;
+        }
+
+        public void UpdateProperties(T entity, params Expression<Func<T, object>>[] properties)
+        {
+            foreach (var property in properties)
+            {
+                _ctx.Entry(entity).Property(property).IsModified = true;
+            }
+        }
+
+        public void UpdateProperty<TProperty>(T entity, Expression<Func<T, TProperty>> property)
+        {
+            throw new NotImplementedException();
         }
     }
 }

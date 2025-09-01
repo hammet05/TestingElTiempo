@@ -67,6 +67,7 @@
             {
                 var days = (int)(DateTime.UtcNow - x.PublishedAt.ToUniversalTime()).TotalDays;
                 var when = days <= 0 ? "Hoy" : (days == 1 ? "Ayer" : $"Hace {days} días");
+
                 <div class="col-12 col-md-6 col-lg-4 offer"
                      data-id="@x.Id"
                      data-title="@x.Title"
@@ -74,6 +75,7 @@
                      data-contract="@x.ContractType"
                      data-salary="@x.Salary"
                      data-date="@x.PublishedAt.ToString("o")">
+
                     <div class="card h-100 shadow-sm border-0">
                         <div class="card-body d-flex flex-column">
                             <div class="d-flex align-items-start justify-content-between">
@@ -192,6 +194,33 @@
             }
 
             function applySort() {
+                const mode = $sort.value;
+        
+                const sorted = items.slice().sort((a, b) => {
+
+                    let salarioA = parseFloat(a.dataset.salary) || 0;
+                    let salarioB = parseFloat(b.dataset.salary) || 0;
+
+                    let dateA = Date.parse(a.dataset.date) || 0;
+                    let dateB = Date.parse(b.dataset.date) || 0;
+                    debugger
+                    switch (mode) {
+                        case 'salary_desc':
+                            return salarioB - salarioA; // mayor salario primero
+                            break;
+                        case 'salary_asc':
+                            return salarioA - salarioB; // menor salario primero
+                            break;
+                        case 'date_asc':
+                            return dateA - dateB;   // más antiguas primero
+                            break;
+                        case 'date_desc':
+                        default: return dateB - dateA;           // más recientes primero
+                    }
+                });
+
+                // Reinyectar en el DOM en el nuevo orden
+                sorted.forEach(el => $cards.appendChild(el));
             }
 
             $cards.addEventListener('click', function (e) {
